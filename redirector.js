@@ -1,85 +1,62 @@
 var express = require("express");
 var app = express();
-var SerialPort = require("serialport").SerialPort
+var phoneAPI = require("./phoneapi");
 
-var serialPort = new SerialPort("/dev/tty.SL400H-SPP",{ baudrate: 9600 }, false);
 
 //Start webserver
 app
+
+/*
 	.get('/command/:command', function(req, res){ 
 		var command = req.param('command');
 
-		sendCommand(command)
+		phoneAPI.sendCommand(command)
 
 		res.send("{success:true}");
 	})
 	.get('/call/:number', function (req, res) {
 		var number = req.param('number');
-		callNumber(number);
+		phoneAPI.callNumber(number);
 
 		res.send("{success:true}");
 	})
+*/
 	.get('/redirect/:number', function (req, res) {
 		var number = req.param('number');
-		redirectToNumber(number);
-
-		res.send("{success:true}");
+		phoneAPI.redirectToNumber(number, function() {
+			console.log("Redirect success.")
+			res.send("{success:true}");
+			phoneAPI.resetCallbacks();
+		}, function(code, message) {
+			console.log("Redirect failure.")
+			res.send("{success:false, code: "+code+", message:'"+message+"'}");
+			phoneAPI.resetCallbacks();
+		});
 	})
 	.get('/disableredirect', function (req, res) {
-		disableRedirect();
-
-		res.send("{success:true}");
+		phoneAPI.disableRedirect(function() {
+			console.log("Disable redirect success.")
+			res.send("{success:true}");
+			phoneAPI.resetCallbacks();
+		}, function(code, message) {
+			console.log("Disable redirect failure.")
+			res.send("{success:false, code: "+code+", message:'"+message+"'}");
+			phoneAPI.resetCallbacks();
+		});
 	})
 	.get('/hangup', function (req, res) {
-		hangUp();
-
-		res.send("{success:true}");
+		phoneAPI.hangUp(function() {
+			console.log("Hangup success.")
+			res.send("{success:true}");
+			phoneAPI.resetCallbacks();
+		}, function(code, message) {
+			console.log("Hangup failure.")
+			res.send("{success:false, code: "+code+", message:'"+message+"'}");
+			phoneAPI.resetCallbacks();
+		});
 	})
 
 app.listen(8080, function() {
 	console.log("Listening on 8080");
 });
 
-//Serial port callbacks
-serialPort
-	.on('open', function(data) {
-		console.log('Serial port opened.');
-	})
-	.on('data', function(data) {
-		console.log('Data: ' + data);
-	})	
-	.on('error', function(error) {
-		console.log('Error: ' + error);
-	})
-	.on('close', function(error) {
-		console.log('Connection closed.');
-	});
-
-//Open serial port
-serialPort.open();
-
-//Helper functions
-function sendCommand(command) {
-	console.log('Sending: ' + command);
-	serialPort.write(command + "\n", function(error) {
-	    if (error) { console.log('Write error: ' + err); }
-    });
-}
-
-function callNumber(number) {
-	sendCommand('ATDT '+number)
-}
-
-function hangUp() {
-	sendCommand('ATH');
-}
-
-function redirectToNumber(number) {
-	callNumber('*21*'+number+'#')
-	setTimeout(hangUp, 15000);
-}
-
-function disableRedirect() {
-	callNumber('#21#')
-	setTimeout(hangUp, 15000);
-}
