@@ -110,13 +110,12 @@ function PhoneAPI() {
 		}, 2000);
 	};
 
+
 	/**
 	*
 	*	Public API
 	*
 	**/
-
-
 
 	this.callNumber = function(number, onSuccess, onError) {
 		successCallback = onSuccess;
