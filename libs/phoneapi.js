@@ -1,5 +1,5 @@
 var SerialPort = require("serialport").SerialPort;
-var serialPort = new SerialPort("/dev/tty.SL400H-SPP");
+var serialPort = new SerialPort("/dev/ttyACM0");
 
 function PhoneAPI() {
 	// private variables
